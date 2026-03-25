@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual SN 360</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',sans-serif; background:#0a0a0a; color:#fff; }
+nav { background:linear-gradient(135deg,#1a1a2e,#16213e); padding:15px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #00d4ff; position:sticky; top:0; z-index:100; }
+.logo { font-size:24px; font-weight:bold; color:#00d4ff; cursor:pointer; }
+.logo span { color:#fff; }
+.nav-buttons button { background:transparent; border:1px solid #00d4ff; color:#00d4ff; padding:8px 18px; border-radius:5px; cursor:pointer; margin-left:8px; transition:all 0.3s; font-size:13px; }
+.nav-buttons button:hover { background:#00d4ff; color:#000; }
+.page { display:none; }
+.page.active { display:block; }
+.hero { background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460); padding:70px 40px; text-align:center; }
+.hero h1 { font-size:46px; color:#00d4ff; margin-bottom:12px; }
+.hero p { font-size:17px; color:#aaa; }
+.hero-stats { display:flex; justify-content:center; gap:50px; margin-top:30px; }
+.stat h2 { font-size:34px; color:#00d4ff; }
+.stat p { color:#aaa; font-size:14px; }
+.filters { padding:25px 40px; background:#111; display:flex; gap:12px; flex-wrap:wrap; }
+.filter-btn { padding:10px 22px; border-radius:25px; border:1px solid #333; background:transparent; color:#aaa; cursor:pointer; transition:all 0.3s; }
+.filter-btn:hover,.filter-btn.active { background:#00d4ff; color:#000; border-color:#00d4ff; }
+.properties { padding:40px; display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:25px; }
+.card { background:linear-gradient(135deg,#1a1a2e,#16213e); border-radius:15px; overflow:hidden; border:1px solid #333; transition:transform 0.3s,border-color 0.3s; }
+.card:hover { transform:translateY(-5px); border-color:#00d4ff; }
+.card-image { height:200px; position:relative; overflow:hidden; background:#0f1525; display:flex; align-items:center; justify-content:center; font-size:60px; }
+.card-image img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+.card-badge { position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.75); color:#00d4ff; padding:4px 12px; border-radius:20px; font-size:11px; text-transform:uppercase; letter-spacing:1px; z-index:2; }
+.card-body { padding:18px; }
+.card-title { font-size:18px; font-weight:bold; margin-bottom:6px; }
+.card-ville { color:#aaa; margin-bottom:10px; font-size:14px; }
+.card-prix { font-size:17px; color:#00d4ff; font-weight:bold; margin-bottom:14px; }
+.card-footer { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+.badge { padding:4px 10px; border-radius:20px; font-size:11px; }
+.badge.disponible { background:#00ff8833; color:#00ff88; border:1px solid #00ff88; }
+.badge.indisponible { background:#ff444433; color:#ff4444; border:1px solid #ff4444; }
+.btn-detail { background:transparent; border:1px solid #00d4ff; color:#00d4ff; padding:7px 12px; border-radius:7px; cursor:pointer; transition:all 0.3s; font-size:12px; }
+.btn-detail:hover { background:#00d4ff; color:#000; }
+.btn-visit { background:linear-gradient(135deg,#00d4ff,#0080ff); color:#000; border:none; padding:7px 12px; border-radius:7px; cursor:pointer; font-weight:bold; font-size:12px; }
+.detail-hero { height:380px; position:relative; overflow:hidden; background:#0f1525; display:flex; align-items:center; justify-content:center; font-size:100px; }
+.detail-hero img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+.detail-overlay { position:absolute; bottom:0; left:0; right:0; padding:25px 40px; background:linear-gradient(transparent,rgba(0,0,0,0.92)); z-index:2; }
+.detail-overlay h1 { font-size:32px; margin-top:8px; }
+.detail-overlay p { color:#00d4ff; }
+.detail-content { padding:35px; display:grid; grid-template-columns:2fr 1fr; gap:25px; }
+.detail-box { background:#1a1a2e; border-radius:12px; padding:25px; border:1px solid #333; }
+.detail-box h2 { color:#00d4ff; margin-bottom:18px; }
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+.detail-item { background:#0f1525; padding:13px; border-radius:8px; }
+.detail-item label { color:#aaa; font-size:11px; display:block; margin-bottom:4px; }
+.detail-item span { font-size:15px; font-weight:bold; }
+.gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:15px; }
+.gallery-item { height:110px; background:#0f1525; border-radius:8px; border:1px solid #333; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:30px; overflow:hidden; }
+.gallery-item img { width:100%; height:100%; object-fit:cover; }
+.sidebar-card { background:#1a1a2e; border-radius:12px; padding:22px; border:1px solid #333; margin-bottom:15px; }
+.sidebar-card h3 { color:#00d4ff; margin-bottom:12px; }
+.btn-full { width:100%; padding:12px; border-radius:9px; font-size:14px; font-weight:bold; cursor:pointer; margin-bottom:8px; transition:opacity 0.3s; border:none; }
+.btn-full:hover { opacity:0.85; }
+.btn-primary { background:linear-gradient(135deg,#00d4ff,#0080ff); color:#000; }
+.btn-secondary { background:transparent; border:1px solid #00d4ff !important; color:#00d4ff; }
+.piece-item { background:#0f1525; padding:9px 14px; border-radius:7px; color:#aaa; font-size:13px; cursor:pointer; margin-bottom:6px; transition:all 0.3s; }
+.piece-item:hover { background:#00d4ff22; color:#00d4ff; }
+.back-btn { background:transparent; border:1px solid #444; color:#aaa; padding:7px 18px; border-radius:7px; cursor:pointer; margin-bottom:12px; transition:all 0.3s; }
+.back-btn:hover { border-color:#00d4ff; color:#00d4ff; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center; }
+.modal.open { display:flex; }
+.modal-box { background:#1a1a2e; border-radius:14px; padding:35px; width:90%; max-width:520px; border:1px solid #00d4ff; max-height:90vh; overflow-y:auto; }
+.modal-title { font-size:22px; color:#00d4ff; margin-bottom:22px; text-align:center; }
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; color:#aaa; margin-bottom:6px; font-size:13px; }
+.form-group input,.form-group select,.form-group textarea { width:100%; padding:11px; background:#0f3460; border:1px solid #333; border-radius:7px; color:#fff; font-size:14px; font-family:inherit; }
+.form-group textarea { height:90px; resize:vertical; }
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus { outline:none; border-color:#00d4ff; }
+.form-group select option { background:#1a1a2e; }
+.btn-x { float:right; background:transparent; border:none; color:#aaa; font-size:22px; cursor:pointer; }
+.err { color:#ff4444; text-align:center; margin-top:8px; font-size:13px; }
+.ok { color:#00ff88; text-align:center; margin-top:8px; font-size:13px; }
+.visit-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.97); z-index:2000; flex-direction:column; }
+.visit-modal.open { display:flex; }
+.visit-header { padding:13px 35px; background:#1a1a2e; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #00d4ff; }
+.visit-body { flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:13px; padding:15px; }
+.visit-scene { width:85%; height:55vh; border-radius:14px; border:2px solid #00d4ff; position:relative; overflow:hidden; background:#0a0a2e; }
+.visit-rooms { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.room-btn { padding:9px 16px; background:#1a1a2e; border:1px solid #333; color:#fff; border-radius:7px; cursor:pointer; transition:all 0.3s; font-size:13px; }
+.room-btn:hover,.room-btn.active { background:#00d4ff; color:#000; border-color:#00d4ff; }
+.visit-info { background:#1a1a2e; border-top:1px solid #333; padding:10px 35px; display:flex; gap:25px; flex-wrap:wrap; }
+.info-item { color:#aaa; font-size:12px; }
+.info-item span { color:#00d4ff; font-weight:bold; }
+.plans { padding:50px 40px; }
+.plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px; }
+.plan-card { background:#1a1a2e; border-radius:14px; padding:30px; border:1px solid #333; text-align:center; transition:transform 0.3s; }
+.plan-card:hover { transform:translateY(-5px); }
+.plan-card.popular { border-color:#00d4ff; position:relative; }
+.plan-card.popular::before { content:'⭐ Populaire'; position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#00d4ff; color:#000; padding:3px 14px; border-radius:20px; font-size:11px; font-weight:bold; }
+.plan-name { font-size:20px; font-weight:bold; margin-bottom:8px; }
+.plan-price { font-size:30px; color:#00d4ff; font-weight:bold; margin-bottom:4px; }
+.plan-period { color:#aaa; font-size:13px; margin-bottom:18px; }
+.plan-features { list-style:none; margin-bottom:22px; text-align:left; }
+.plan-features li { color:#ccc; font-size:13px; padding:5px 0; border-bottom:1px solid #222; }
+.plan-features li::before { content:'✅ '; }
+.btn-plan { width:100%; padding:12px; border:none; border-radius:9px; font-size:14px; font-weight:bold; cursor:pointer; }
+.btn-plan.primary { background:linear-gradient(135deg,#00d4ff,#0080ff); color:#000; }
+.btn-plan.outline { background:transparent; border:1px solid #00d4ff; color:#00d4ff; }
+.page-header { background:linear-gradient(135deg,#1a1a2e,#16213e); padding:35px 40px; border-bottom:1px solid #333; }
+.page-header h2 { color:#00d4ff; font-size:26px; margin-bottom:6px; }
+.page-header p { color:#aaa; }
+.res-list { padding:35px; display:flex; flex-direction:column; gap:14px; }
+.res-item { background:#1a1a2e; border-radius:12px; padding:18px 22px; border:1px solid #333; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+.res-info h3 { margin-bottom:4px; }
+.res-info p { color:#aaa; font-size:13px; margin-top:3px; }
+.badge-status { padding:5px 14px; border-radius:20px; font-size:12px; font-weight:bold; background:#ffaa0033; color:#ffaa00; border:1px solid #ffaa00; }
+/* CONTACT PAGE */
+.contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:30px; padding:40px; }
+.contact-info { background:#1a1a2e; border-radius:14px; padding:30px; border:1px solid #333; }
+.contact-info h2 { color:#00d4ff; margin-bottom:20px; }
+.contact-item { display:flex; align-items:center; gap:15px; padding:15px 0; border-bottom:1px solid #222; }
+.contact-item:last-child { border-bottom:none; }
+.contact-icon { font-size:28px; min-width:40px; }
+.contact-label { color:#aaa; font-size:12px; margin-bottom:3px; }
+.contact-value { color:#fff; font-size:15px; font-weight:bold; }
+.contact-value a { color:#00d4ff; text-decoration:none; }
+.contact-value a:hover { text-decoration:underline; }
+.contact-form { background:#1a1a2e; border-radius:14px; padding:30px; border:1px solid #333; }
+.contact-form h2 { color:#00d4ff; margin-bottom:20px; }
+/* AI CHAT WIDGET */
+.chat-bubble { position:fixed; bottom:30px; right:30px; z-index:9999; }
+.chat-btn { width:65px; height:65px; border-radius:50%; background:linear-gradient(135deg,#00d4ff,#0080ff); border:none; cursor:pointer; font-size:28px; box-shadow:0 4px 20px rgba(0,212,255,0.4); transition:transform 0.3s; display:flex; align-items:center; justify-content:center; }
+.chat-btn:hover { transform:scale(1.1); }
+.chat-notif { position:absolute; top:-5px; right:-5px; background:#ff4444; color:#fff; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; font-weight:bold; }
+.chat-window { position:fixed; bottom:110px; right:30px; width:380px; height:520px; background:#1a1a2e; border-radius:18px; border:1px solid #00d4ff; z-index:9999; display:none; flex-direction:column; box-shadow:0 10px 40px rgba(0,212,255,0.2); overflow:hidden; }
+.chat-window.open { display:flex; }
+.chat-header { background:linear-gradient(135deg,#0f3460,#16213e); padding:16px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #00d4ff33; }
+.chat-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#00d4ff,#0080ff); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.chat-agent-info h4 { font-size:15px; margin-bottom:2px; }
+.chat-agent-info p { color:#00ff88; font-size:11px; }
+.chat-close { margin-left:auto; background:transparent; border:none; color:#aaa; font-size:20px; cursor:pointer; }
+.chat-messages { flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:12px; }
+.chat-messages::-webkit-scrollbar { width:4px; }
+.chat-messages::-webkit-scrollbar-thumb { background:#333; border-radius:2px; }
+.msg { max-width:80%; padding:10px 14px; border-radius:14px; font-size:13px; line-height:1.5; }
+.msg.bot { background:#0f3460; color:#fff; border-radius:14px 14px 14px 2px; align-self:flex-start; }
+.msg.user { background:linear-gradient(135deg,#00d4ff,#0080ff); color:#000; border-radius:14px 14px 2px 14px; align-self:flex-end; font-weight:500; }
+.msg.typing { background:#0f3460; color:#aaa; font-style:italic; }
+.chat-suggestions { padding:8px 15px; display:flex; gap:6px; flex-wrap:wrap; border-top:1px solid #222; }
+.suggestion-btn { background:#0f3460; border:1px solid #333; color:#00d4ff; padding:5px 10px; border-radius:20px; font-size:11px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+.suggestion-btn:hover { background:#00d4ff22; border-color:#00d4ff; }
+.chat-input-area { padding:12px 15px; border-top:1px solid #222; display:flex; gap:8px; }
+.chat-input { flex:1; background:#0f1525; border:1px solid #333; border-radius:25px; padding:10px 15px; color:#fff; font-size:13px; font-family:inherit; outline:none; }
+.chat-input:focus { border-color:#00d4ff; }
+.chat-send { background:linear-gradient(135deg,#00d4ff,#0080ff); border:none; border-radius:50%; width:38px; height:38px; cursor:pointer; font-size:16px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+footer { background:#111; text-align:center; padding:25px; color:#aaa; border-top:1px solid #333; margin-top:30px; }
+.loading { text-align:center; padding:60px; color:#aaa; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo" onclick="showPage('home')">Virtual <span>SN</span> 360</div>
+  <div class="nav-buttons">
+    <button onclick="showPage('home')">🏠 Accueil</button>
+    <button onclick="showPage('plans')">💼 Plans</button>
+    <button onclick="showPage('contact')">📞 Contact</button>
+    <button onclick="showPage('reservations')">📋 Réservations</button>
+    <button id="btnLogin" onclick="openModal('loginModal')">🔒 Connexion</button>
+    <button id="btnAdmin" style="display:none" onclick="openModal('adminModal')">⚙️ Ajouter</button>
+    <button id="btnLogout" style="display:none" onclick="logout()">Déconnexion</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <h1>🌍 Virtual SN 360</h1>
+    <p>Visitez virtuellement les plus belles propriétés du Sénégal</p>
+    <div class="hero-stats" id="stats">
+      <div class="stat"><h2>-</h2><p>Propriétés</p></div>
+      <div class="stat"><h2>-</h2><p>Disponibles</p></div>
+      <div class="stat"><h2>-</h2><p>Villes</p></div>
+    </div>
+  </div>
+  <div class="filters">
+    <button class="filter-btn active" onclick="filtrer('tous',this)">🏘️ Tous</button>
+    <button class="filter-btn" onclick="filtrer('Maison',this)">🏠 Maisons</button>
+    <button class="filter-btn" onclick="filtrer('Centre Commercial',this)">🏬 Centres Comm.</button>
+    <button class="filter-btn" onclick="filtrer('Usine',this)">🏭 Usines</button>
+  </div>
+  <div class="properties" id="properties"><div class="loading">⏳ Connexion à l'API...</div></div>
+</div>
+
+<!-- DETAIL -->
+<div class="page" id="page-detail">
+  <div class="detail-hero" id="detailHero">
+    <span id="detailEmoji">🏠</span>
+    <img id="detailHeroImg" src="" alt="" style="display:none">
+    <div class="detail-overlay">
+      <button class="back-btn" onclick="showPage('home')">← Retour</button>
+      <h1 id="detailTitle"></h1>
+      <p id="detailSub"></p>
+    </div>
+  </div>
+  <div class="detail-content">
+    <div>
+      <div class="detail-box">
+        <h2>📋 Informations</h2>
+        <div class="detail-grid" id="detailGrid"></div>
+        <h3 style="color:#00d4ff;margin-bottom:12px;margin-top:10px">📸 Galerie</h3>
+        <div class="gallery" id="detailGallery"></div>
+      </div>
+    </div>
+    <div>
+      <div class="sidebar-card">
+        <h3>🎯 Actions</h3>
+        <button class="btn-full btn-primary" id="btnVisit3D">🔍 Visite 3D</button>
+        <button class="btn-full btn-secondary" onclick="openReservation()">📅 Réserver</button>
+        <button class="btn-full btn-secondary" onclick="showPage('contact')">📞 Contacter</button>
+        <button class="btn-full btn-secondary" onclick="ouvrirAppel('audio')">🎤 Appel Audio</button>
+        <button class="btn-full btn-secondary" onclick="ouvrirAppel('video')">📹 Appel Vidéo</button>
+      </div>
+      <div class="sidebar-card">
+        <h3>🚪 Pièces & Zones</h3>
+        <div id="detailPieces"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLANS -->
+<div class="page" id="page-plans">
+  <div class="hero" style="padding:50px 40px"><h1 style="font-size:36px">💼 Nos Plans SaaS</h1><p>Solutions pour agents immobiliers, industriels et promoteurs</p></div>
+  <div class="plans" style="padding:40px">
+    <div class="plans-grid">
+      <div class="plan-card">
+        <div class="plan-name">🆓 Gratuit</div><div class="plan-price">0 FCFA</div><div class="plan-period">pour toujours</div>
+        <ul class="plan-features"><li>1 propriété</li><li>Visite 3D basique</li><li>Page de présentation</li><li>Chat IA</li></ul>
+        <button class="btn-plan outline" onclick="openModal('registerModal')">Commencer</button>
+      </div>
+      <div class="plan-card popular">
+        <div class="plan-name">🏠 Agent</div><div class="plan-price">25 000</div><div class="plan-period">FCFA / mois</div>
+        <ul class="plan-features"><li>10 propriétés</li><li>Visite 3D HD</li><li>Appels audio illimités</li><li>Réservations en ligne</li><li>Agent IA 24/7</li></ul>
+        <button class="btn-plan primary" onclick="openModal('registerModal')">S'abonner</button>
+      </div>
+      <div class="plan-card">
+        <div class="plan-name">🏭 Industriel</div><div class="plan-price">75 000</div><div class="plan-period">FCFA / mois</div>
+        <ul class="plan-features"><li>50 propriétés</li><li>Visite 3D ultra HD</li><li>Appels audio + vidéo</li><li>API access</li><li>Support prioritaire</li></ul>
+        <button class="btn-plan primary" onclick="openModal('registerModal')">S'abonner</button>
+      </div>
+      <div class="plan-card">
+        <div class="plan-name">👑 Enterprise</div><div class="plan-price">Sur devis</div><div class="plan-period"></div>
+        <ul class="plan-features"><li>Propriétés illimitées</li><li>White label</li><li>API complète</li><li>Intégration sur mesure</li><li>Account manager dédié</li></ul>
+        <button class="btn-plan outline" onclick="showPage('contact')">Nous contacter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div class="page" id="page-contact">
+  <div class="page-header"><h2>📞 Contactez-nous</h2><p>Notre équipe est disponible 7j/7</p></div>
+  <div class="contact-grid">
+    <div class="contact-info">
+      <h2>📋 Nos Coordonnées</h2>
+      <div class="contact-item">
+        <div class="contact-icon">📧</div>
+        <div><div class="contact-label">Email</div><div class="contact-value"><a href="mailto:xsafeh@gmail.com">xsafeh@gmail.com</a></div></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">📱</div>
+        <div><div class="contact-label">Téléphone / WhatsApp</div><div class="contact-value"><a href="tel:+221776940848">+221 77 694 08 48</a></div></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">🌍</div>
+        <div><div class="contact-label">Plateforme</div><div class="contact-value">Virtual SN 360</div></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">⏰</div>
+        <div><div class="contact-label">Disponibilité</div><div class="contact-value">Lun–Sam : 8h–20h</div></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">🤖</div>
+        <div><div class="contact-label">Agent IA</div><div class="contact-value" style="color:#00ff88">Disponible 24h/24 — 7j/7</div></div>
+      </div>
+      <div style="margin-top:20px;display:flex;gap:10px">
+        <button class="btn-full btn-primary" style="margin:0" onclick="ouvrirAppel('audio')">🎤 Appel Audio</button>
+        <button class="btn-full btn-secondary" style="margin:0" onclick="ouvrirAppel('video')">📹 Appel Vidéo</button>
+      </div>
+    </div>
+    <div class="contact-form">
+      <h2>✉️ Envoyer un Message</h2>
+      <div class="form-group"><label>Nom complet *</label><input type="text" id="cfNom" placeholder="Sall Abdoulaye"></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="cfEmail" placeholder="contact@email.com"></div>
+      <div class="form-group"><label>Téléphone</label><input type="tel" id="cfTel" placeholder="+221 77 000 00 00"></div>
+      <div class="form-group"><label>Sujet</label>
+        <select id="cfSujet"><option>ℹ️ Informations générales</option><option>🏠 Propriété spécifique</option><option>💼 Partenariat / Plan SaaS</option><option>🔍 Demande de visite</option><option>💰 Négociation</option></select>
+      </div>
+      <div class="form-group"><label>Message *</label><textarea id="cfMsg" placeholder="Votre message..."></textarea></div>
+      <button class="btn-full btn-primary" onclick="soumettreContact()">📤 Envoyer</button>
+      <div id="cfRes"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESERVATIONS -->
+<div class="page" id="page-reservations">
+  <div class="page-header"><h2>📋 Mes Réservations</h2><p>Historique de vos demandes</p></div>
+  <div class="res-list" id="resList"><div class="loading">📭 Aucune réservation.</div></div>
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="loginModal">
+  <div class="modal-box">
+    <button class="btn-x" onclick="closeModal('loginModal')">✕</button>
+    <div class="modal-title">🔒 Connexion Admin</div>
+    <div class="form-group"><label>Utilisateur</label><input type="text" id="username" placeholder="admin"></div>
+    <div class="form-group"><label>Mot de passe</label><input type="password" id="password" placeholder="••••••••"></div>
+    <button class="btn-full btn-primary" onclick="login()">Se connecter</button>
+    <div id="loginMsg"></div>
+  </div>
+</div>
+
+<div class="modal" id="registerModal">
+  <div class="modal-box">
+    <button class="btn-x" onclick="closeModal('registerModal')">✕</button>
+    <div class="modal-title">📝 Créer un compte</div>
+    <div class="form-group"><label>Nom complet</label><input type="text" id="regNom" placeholder="Sall Abdoulaye"></div>
+    <div class="form-group"><label>Email professionnel</label><input type="email" id="regEmail" placeholder="contact@agence.sn"></div>
+    <div class="form-group"><label>Téléphone</label><input type="tel" id="regTel" placeholder="+221 77 000 00 00"></div>
+    <div class="form-group"><label>Secteur</label>
+      <select id="regSecteur"><option value="agent">🏠 Agent Immobilier</option><option value="industriel">🏭 Industriel</option><option value="commercial">🏬 Commerce</option><option value="autre">💼 Autre</option></select>
+    </div>
+    <div class="form-group"><label>Plan</label>
+      <select id="regPlan"><option value="gratuit">🆓 Gratuit</option><option value="agent">🏠 Agent — 25 000 FCFA/mois</option><option value="industriel">🏭 Industriel — 75 000 FCFA/mois</option><option value="enterprise">👑 Enterprise</option></select>
+    </div>
+    <button class="btn-full btn-primary" onclick="soumettreInscription()">✅ Créer mon compte</button>
+    <div id="registerMsg"></div>
+  </div>
+</div>
+
+<div class="modal" id="adminModal">
+  <div class="modal-box">
+    <button class="btn-x" onclick="closeModal('adminModal')">✕</button>
+    <div class="modal-title">⚙️ Ajouter une Propriété</div>
+    <div class="form-group"><label>Type</label><select id="newType"><option value="Maison">🏠 Maison</option><option value="Centre Commercial">🏬 Centre Commercial</option><option value="Usine">🏭 Usine</option></select></div>
+    <div class="form-group"><label>Nom</label><input type="text" id="newNom" placeholder="Villa Dakar"></div>
+    <div class="form-group"><label>Ville</label><input type="text" id="newVille" placeholder="Dakar"></div>
+    <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="newPrix" placeholder="85000000"></div>
+    <div class="form-group"><label>Surface (m²)</label><input type="number" id="newSurface" placeholder="350"></div>
+    <button class="btn-full btn-primary" onclick="ajouterPropriete()">✅ Ajouter</button>
+    <div id="adminMsg"></div>
+  </div>
+</div>
+
+<div class="modal" id="reservationModal">
+  <div class="modal-box">
+    <button class="btn-x" onclick="closeModal('reservationModal')">✕</button>
+    <div class="modal-title">📅 Réserver une Visite</div>
+    <div id="resPropNom" style="text-align:center;color:#aaa;margin-bottom:18px;font-size:13px"></div>
+    <div class="form-group"><label>Nom complet *</label><input type="text" id="resNom" placeholder="Sall Abdoulaye"></div>
+    <div class="form-group"><label>Téléphone *</label><input type="tel" id="resTel" placeholder="+221 77 694 08 48"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="resEmail" placeholder="contact@email.com"></div>
+    <div class="form-group"><label>Date *</label><input type="date" id="resDate"></div>
+    <div class="form-group"><label>Type</label><select id="resType"><option value="virtuelle">🌐 Virtuelle</option><option value="physique">🏠 Physique</option></select></div>
+    <div class="form-group"><label>Message</label><textarea id="resMsg" placeholder="Questions..."></textarea></div>
+    <button class="btn-full btn-primary" onclick="soumettreReservation()">✅ Confirmer</button>
+    <div id="reservationMsg"></div>
+  </div>
+</div>
+
+<div class="modal" id="appelModal">
+  <div class="modal-box" style="text-align:center">
+    <button class="btn-x" onclick="fermerAppel()">✕</button>
+    <div class="modal-title" id="appelTitle">📞 Appel</div>
+    <div id="appelVideo" style="display:none;margin-bottom:15px">
+      <video id="localVideo" autoplay muted style="width:45%;border-radius:10px;border:2px solid #00d4ff"></video>
+      <video id="remoteVideo" autoplay style="width:45%;border-radius:10px;border:2px solid #00ff88;margin-left:10px;background:#111"></video>
+    </div>
+    <div id="appelStatus" style="color:#00ff88;font-size:16px;margin:20px 0">⏳ Connexion...</div>
+    <div style="display:flex;justify-content:center;gap:15px;margin-top:20px">
+      <button onclick="toggleMic()" id="btnMic" style="padding:15px 25px;background:#1a1a2e;border:1px solid #00d4ff;color:#fff;border-radius:50px;cursor:pointer;font-size:18px">🎤</button>
+      <button onclick="fermerAppel()" style="padding:15px 25px;background:#ff4444;border:none;color:#fff;border-radius:50px;cursor:pointer;font-size:18px">📵</button>
+      <button onclick="toggleCam()" id="btnCam" style="padding:15px 25px;background:#1a1a2e;border:1px solid #00d4ff;color:#fff;border-radius:50px;cursor:pointer;font-size:18px">📹</button>
+    </div>
+  </div>
+</div>
+
+<!-- VISITE 3D -->
+<div class="visit-modal" id="visitModal">
+  <div class="visit-header">
+    <div class="logo">🌍 <span id="visitTitle"></span></div>
+    <button class="btn-x" onclick="closeVisit()">✕</button>
+  </div>
+  <div class="visit-body">
+    <div class="visit-scene" id="visitScene"></div>
+    <div class="visit-rooms" id="visitRooms"></div>
+  </div>
+  <div class="visit-info" id="visitInfo"></div>
+</div>
+
+<!-- AI CHAT WIDGET -->
+<div class="chat-bubble">
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <div class="chat-avatar">🤖</div>
+      <div class="chat-agent-info">
+        <h4>Agent IA — Virtual SN 360</h4>
+        <p>🟢 En ligne — Répond instantanément</p>
+      </div>
+      <button class="chat-close" onclick="toggleChat()">✕</button>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-suggestions" id="chatSuggestions">
+      <button class="suggestion-btn" onclick="envoyerSuggestion('Voir les propriétés disponibles')">🏠 Propriétés</button>
+      <button class="suggestion-btn" onclick="envoyerSuggestion('Quels sont vos plans et tarifs ?')">💼 Tarifs</button>
+      <button class="suggestion-btn" onclick="envoyerSuggestion('Comment réserver une visite ?')">📅 Réserver</button>
+      <button class="suggestion-btn" onclick="envoyerSuggestion('Comment vous contacter ?')">📞 Contact</button>
+    </div>
+    <div class="chat-input-area">
+      <input class="chat-input" id="chatInput" placeholder="Posez votre question..." onkeydown="if(event.key==='Enter')envoyerMessage()">
+      <button class="chat-send" onclick="envoyerMessage()">➤</button>
+    </div>
+  </div>
+  <button class="chat-btn" onclick="toggleChat()">
+    🤖
+    <span class="chat-notif" id="chatNotif">1</span>
+  </button>
+</div>
+
+<footer><p>© 2026 Virtual SN 360 — SaaS de visite virtuelle 3D — Sénégal | 📧 xsafeh@gmail.com | 📱 +221 77 694 08 48</p></footer>
+
+<script>
+const API = "";
+let token = localStorage.getItem("token");
+let props = [];
+let propActuelle = null;
+let reservations = JSON.parse(localStorage.getItem("reservations") || "[]");
+let mediaStream = null;
+let chatHistorique = [];
+let chatOuvert = false;
+
+const piecesMap = {
+    "Maison": ["🛋️ Salon","🍳 Cuisine","🛏️ Chambre 1","🛏️ Chambre 2","🏊 Piscine"],
+    "Centre Commercial": ["🛍️ Boutiques","🍔 Food Court","🎬 Cinéma","🛒 Supermarché","🅿️ Parking"],
+    "Usine": ["⚙️ Atelier","📦 Stockage","🏢 Bureaux","🔬 Laboratoire","🚛 Quai"]
+};
+
+const emojisType = {"Maison":"🏠","Centre Commercial":"🏬","Usine":"🏭"};
+
+// ========== CHAT IA ==========
+function toggleChat() {
+    chatOuvert = !chatOuvert;
+    document.getElementById("chatWindow").classList.toggle("open", chatOuvert);
+    document.getElementById("chatNotif").style.display = "none";
+    if (chatOuvert && chatHistorique.length === 0) {
+        setTimeout(() => ajouterMessageBot("👋 Bonjour ! Je suis l'agent IA de **Virtual SN 360**.\n\nJe peux vous aider à :\n• Trouver une propriété\n• Organiser une visite virtuelle\n• Répondre à vos questions\n• Vous mettre en contact avec notre équipe\n\nComment puis-je vous aider ?"), 500);
+    }
+}
+
+function ajouterMessageBot(texte) {
+    const msgs = document.getElementById("chatMessages");
+    const div = document.createElement("div");
+    div.className = "msg bot";
+    div.innerHTML = texte.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>");
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+}
+
+function ajouterMessageUser(texte) {
+    const msgs = document.getElementById("chatMessages");
+    const div = document.createElement("div");
+    div.className = "msg user";
+    div.textContent = texte;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+}
+
+function ajouterTyping() {
+    const msgs = document.getElementById("chatMessages");
+    const div = document.createElement("div");
+    div.className = "msg typing";
+    div.id = "typingIndicator";
+    div.textContent = "Agent IA est en train d'écrire...";
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+}
+
+function supprimerTyping() {
+    const t = document.getElementById("typingIndicator");
+    if (t) t.remove();
+}
+
+async function envoyerMessage() {
+    const input = document.getElementById("chatInput");
+    const texte = input.value.trim();
+    if (!texte) return;
+    input.value = "";
+    ajouterMessageUser(texte);
+    document.getElementById("chatSuggestions").style.display = "none";
+    chatHistorique.push({ role:"user", content:texte });
+    ajouterTyping();
+
+    try {
+        const systemPrompt = `Tu es un agent immobilier IA professionnel et sympathique pour Virtual SN 360, une plateforme sénégalaise de visite virtuelle 3D de propriétés.
+
+Informations sur la plateforme :
+- Nom : Virtual SN 360
+- Email : xsafeh@gmail.com
+- Téléphone/WhatsApp : +221 77 694 08 48
+- Types de propriétés : Maisons/Villas, Centres Commerciaux, Usines/Zones Industrielles
+- Villes couvertes : Dakar, Saly, Thiès, Diamniadio, Saint-Louis et plus
+
+Plans SaaS :
+- Gratuit : 1 propriété, visite 3D basique
+- Agent : 25 000 FCFA/mois — 10 propriétés, appels audio, réservations
+- Industriel : 75 000 FCFA/mois — 50 propriétés, vidéo, API
+- Enterprise : Sur devis — illimité, white label
+
+Services :
+- Visite virtuelle 3D interactive
+- Galerie photos IA
+- Appels audio et vidéo avec les agents
+- Réservation de visites en ligne
+- Chat IA 24h/24
+
+Réponds en français, de manière professionnelle et chaleureuse. Sois concis (max 3-4 lignes). Si quelqu'un veut être contacté, donne email et téléphone. Si quelqu'un cherche une propriété, demande ses critères (type, ville, budget).`;
+
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1000,
+                system: systemPrompt,
+                messages: chatHistorique
+            })
+        });
+
+        const data = await res.json();
+        supprimerTyping();
+
+        if (data.content && data.content[0]) {
+            const reponse = data.content[0].text;
+            chatHistorique.push({ role:"assistant", content:reponse });
+            ajouterMessageBot(reponse);
+        } else {
+            repondreLocalement(texte);
+        }
+    } catch {
+        supprimerTyping();
+        repondreLocalement(texte);
+    }
+}
+
+function repondreLocalement(texte) {
+    const t = texte.toLowerCase();
+    let reponse = "";
+
+    if (t.includes("bonjour") || t.includes("salut") || t.includes("bonsoir")) {
+        reponse = "👋 Bonjour ! Bienvenue sur Virtual SN 360. Comment puis-je vous aider aujourd'hui ?";
+    } else if (t.includes("maison") || t.includes("villa") || t.includes("propriété")) {
+        reponse = `🏠 Nous avons **${props.filter(p=>p.type==="Maison").length} maisons/villas** disponibles.\n\nVous pouvez les consulter en cliquant sur **🏠 Maisons** dans les filtres. Chaque propriété propose une visite 3D complète !`;
+    } else if (t.includes("prix") || t.includes("tarif") || t.includes("coût") || t.includes("plan")) {
+        reponse = "💼 Nos plans :\n• **Gratuit** : 0 FCFA\n• **Agent** : 25 000 FCFA/mois\n• **Industriel** : 75 000 FCFA/mois\n• **Enterprise** : Sur devis\n\nCliquez sur **💼 Plans** pour plus de détails.";
+    } else if (t.includes("contact") || t.includes("appel") || t.includes("téléphone")) {
+        reponse = "📞 Contactez-nous :\n• **Email** : xsafeh@gmail.com\n• **WhatsApp** : +221 77 694 08 48\n\nOu utilisez les boutons **🎤 Appel Audio** / **📹 Appel Vidéo** sur la page d'une propriété !";
+    } else if (t.includes("réserv") || t.includes("visite")) {
+        reponse = "📅 Pour réserver une visite :\n1. Cliquez sur une propriété\n2. Cliquez sur **📋 Détail**\n3. Cliquez sur **📅 Réserver**\n\nNous vous contacterons sous 24h !";
+    } else if (t.includes("usine") || t.includes("industriel") || t.includes("industrie")) {
+        reponse = `🏭 Nous avons **${props.filter(p=>p.type==="Usine").length} zones industrielles** disponibles.\n\nUtilisez le filtre **🏭 Usines** pour les voir. Des visites 3D complètes sont disponibles !`;
+    } else if (t.includes("commerce") || t.includes("mall") || t.includes("centre commercial")) {
+        reponse = `🏬 Nous avons **${props.filter(p=>p.type==="Centre Commercial").length} centres commerciaux** disponibles.\n\nUtilisez le filtre **🏬 Centres Comm.** pour les voir !`;
+    } else {
+        reponse = "Je suis là pour vous aider ! 😊\n\nVous pouvez me poser des questions sur :\n• Nos **propriétés** disponibles\n• Nos **plans et tarifs**\n• **Réserver** une visite\n• Nous **contacter**";
+    }
+
+    chatHistorique.push({ role:"assistant", content:reponse });
+    ajouterMessageBot(reponse);
+}
+
+function envoyerSuggestion(texte) {
+    document.getElementById("chatInput").value = texte;
+    envoyerMessage();
+}
+
+// ========== NAVIGATION ==========
+function showPage(name) {
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(`page-${name}`).classList.add("active");
+    if (name==="reservations") afficherReservations();
+    window.scrollTo(0,0);
+}
+
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+// ========== API ==========
+async function chargerProps() {
+    try {
+        const res = await fetch(`${API}/proprietes`);
+        props = await res.json();
+        afficherProps(props);
+        chargerStats();
+    } catch {
+        document.getElementById("properties").innerHTML = '<div class="loading">❌ API non disponible — Lancez le serveur.</div>';
+    }
+}
+
+async function chargerStats() {
+    try {
+        const res = await fetch(`${API}/statistiques`);
+        const d = await res.json();
+        const villes = [...new Set(props.map(p=>p.ville))].length;
+        document.getElementById("stats").innerHTML = `
+            <div class="stat"><h2>${d.total}</h2><p>Propriétés</p></div>
+            <div class="stat"><h2>${d.disponibles}</h2><p>Disponibles</p></div>
+            <div class="stat"><h2>${villes}</h2><p>Villes</p></div>`;
+    } catch {}
+}
+
+function afficherProps(liste) {
+    const c = document.getElementById("properties");
+    if (!liste.length) { c.innerHTML='<div class="loading">Aucune propriété.</div>'; return; }
+    c.innerHTML = liste.map((p,i) => `
+        <div class="card">
+            <div class="card-image">${emojisType[p.type]||"🏠"}
+                <div class="card-badge">${p.type}</div>
+            </div>
+            <div class="card-body">
+                <div class="card-title">${p.nom}</div>
+                <div class="card-ville">📍 ${p.ville}</div>
+                <div class="card-prix">${Number(p.prix).toLocaleString()} FCFA</div>
+                <div class="card-footer">
+                    <span class="badge ${p.disponible?'disponible':'indisponible'}">${p.disponible?'✅ Disponible':'❌ Indisponible'}</span>
+                    <div style="display:flex;gap:7px">
+                        <button class="btn-detail" onclick="voirDetail(${p.id})">📋 Détail</button>
+                        <button class="btn-visit" onclick="visiter(${p.id})">🔍 3D</button>
+                    </div>
+                </div>
+            </div>
+        </div>`).join("");
+}
+
+function filtrer(type, btn) {
+    document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    afficherProps(type==="tous" ? props : props.filter(p=>p.type===type));
+}
+
+function voirDetail(id) {
+    const p = props.find(x=>x.id===id);
+    propActuelle = p;
+    document.getElementById("detailEmoji").textContent = emojisType[p.type]||"🏠";
+    document.getElementById("detailTitle").textContent = p.nom;
+    document.getElementById("detailSub").textContent = `📍 ${p.ville} — ${p.type}`;
+    document.getElementById("detailGrid").innerHTML = `
+        <div class="detail-item"><label>Type</label><span>${p.type}</span></div>
+        <div class="detail-item"><label>Ville</label><span>${p.ville}</span></div>
+        <div class="detail-item"><label>Prix</label><span>${Number(p.prix).toLocaleString()} FCFA</span></div>
+        <div class="detail-item"><label>Surface</label><span>${p.surface} m²</span></div>
+        <div class="detail-item"><label>Statut</label><span>${p.disponible?'✅ Disponible':'❌ Indisponible'}</span></div>
+        <div class="detail-item"><label>Référence</label><span>#${p.id}</span></div>`;
+    const pieces = piecesMap[p.type]||[];
+    document.getElementById("detailGallery").innerHTML = [0,1,2,3,4,5].map(i=>
+        `<div class="gallery-item" onclick="visiter(${p.id})">${emojisType[p.type]||"🏠"}</div>`).join("");
+    document.getElementById("detailPieces").innerHTML = pieces.map(pc=>
+        `<div class="piece-item" onclick="visiter(${p.id})">${pc}</div>`).join("");
+    document.getElementById("btnVisit3D").onclick = ()=>visiter(p.id);
+    showPage("detail");
+}
+
+function openReservation() {
+    if (propActuelle) document.getElementById("resPropNom").textContent = `🏠 ${propActuelle.nom}`;
+    openModal("reservationModal");
+}
+
+function soumettreReservation() {
+    const nom=document.getElementById("resNom").value;
+    const tel=document.getElementById("resTel").value;
+    const date=document.getElementById("resDate").value;
+    const msg=document.getElementById("reservationMsg");
+    if (!nom||!tel||!date) { msg.className="err"; msg.textContent="❌ Remplissez les champs (*)"; return; }
+    const r={id:Date.now(),propriete:propActuelle?propActuelle.nom:"?",nom,tel,date,type:document.getElementById("resType").value,statut:"pending",createdAt:new Date().toLocaleDateString("fr-FR")};
+    reservations.push(r);
+    localStorage.setItem("reservations",JSON.stringify(reservations));
+    msg.className="ok"; msg.textContent="✅ Réservation confirmée ! Nous vous contacterons bientôt.";
+    setTimeout(()=>{ closeModal("reservationModal"); msg.textContent=""; },2000);
+}
+
+function soumettreContact() {
+    const nom=document.getElementById("cfNom").value;
+    const message=document.getElementById("cfMsg").value;
+    const msg=document.getElementById("cfRes");
+    if (!nom||!message) { msg.className="err"; msg.textContent="❌ Remplissez tous les champs"; return; }
+    msg.className="ok"; msg.textContent="✅ Message envoyé ! Nous vous répondrons à xsafeh@gmail.com sous 24h.";
+    setTimeout(()=>{ msg.textContent=""; },3000);
+}
+
+function soumettreInscription() {
+    const nom=document.getElementById("regNom").value;
+    const email=document.getElementById("regEmail").value;
+    const msg=document.getElementById("registerMsg");
+    if (!nom||!email) { msg.className="err"; msg.textContent="❌ Remplissez tous les champs"; return; }
+    msg.className="ok"; msg.textContent="✅ Compte créé ! Nous vous contacterons sous 24h.";
+    setTimeout(()=>{ closeModal("registerModal"); msg.textContent=""; },2500);
+}
+
+function afficherReservations() {
+    const c=document.getElementById("resList");
+    if (!reservations.length) { c.innerHTML='<div class="loading">📭 Aucune réservation.</div>'; return; }
+    c.innerHTML=reservations.map(r=>`
+        <div class="res-item">
+            <div class="res-info">
+                <h3>🏠 ${r.propriete}</h3>
+                <p>👤 ${r.nom} — 📞 ${r.tel}</p>
+                <p>📅 ${r.date} — ${r.type==='virtuelle'?'🌐 Virtuelle':'🏠 Physique'}</p>
+                <p style="color:#555;font-size:11px;margin-top:4px">Demande du ${r.createdAt}</p>
+            </div>
+            <span class="badge-status">⏳ En attente</span>
+        </div>`).join("");
+}
+
+async function ouvrirAppel(type) {
+    const title=document.getElementById("appelTitle");
+    const status=document.getElementById("appelStatus");
+    const videoDiv=document.getElementById("appelVideo");
+    title.textContent=type==="video"?"📹 Appel Vidéo":"🎤 Appel Audio";
+    document.getElementById("appelModal").classList.add("open");
+    try {
+        mediaStream=await navigator.mediaDevices.getUserMedia({audio:true,video:type==="video"});
+        if (type==="video") { videoDiv.style.display="block"; document.getElementById("localVideo").srcObject=mediaStream; }
+        status.textContent="🟢 Connecté — En attente d'un agent...";
+        status.style.color="#00ff88";
+    } catch { status.textContent="❌ Accès micro/caméra refusé"; status.style.color="#ff4444"; }
+}
+
+function fermerAppel() {
+    if (mediaStream) { mediaStream.getTracks().forEach(t=>t.stop()); mediaStream=null; }
+    document.getElementById("localVideo").srcObject=null;
+    document.getElementById("appelVideo").style.display="none";
+    document.getElementById("appelStatus").textContent="⏳ Connexion...";
+    closeModal("appelModal");
+}
+
+function toggleMic() {
+    if (!mediaStream) return;
+    const t=mediaStream.getAudioTracks()[0];
+    if (t) { t.enabled=!t.enabled; document.getElementById("btnMic").style.opacity=t.enabled?"1":"0.5"; }
+}
+
+function toggleCam() {
+    if (!mediaStream) return;
+    const t=mediaStream.getVideoTracks()[0];
+    if (t) { t.enabled=!t.enabled; document.getElementById("btnCam").style.opacity=t.enabled?"1":"0.5"; }
+}
+
+// ========== VISITE 3D ==========
+function visiter(id) {
+    const p=props.find(x=>x.id===id);
+    propActuelle=p;
+    document.getElementById("visitTitle").textContent=p.nom;
+    const rooms=piecesMap[p.type]||["🏠 Entrée"];
+    document.getElementById("visitRooms").innerHTML=rooms.map((r,i)=>
+        `<button class="room-btn ${i===0?'active':''}" onclick="changerPiece(this,'${r}')">${r}</button>`).join("");
+    document.getElementById("visitInfo").innerHTML=`
+        <div class="info-item">Type : <span>${p.type}</span></div>
+        <div class="info-item">Ville : <span>${p.ville}</span></div>
+        <div class="info-item">Prix : <span>${Number(p.prix).toLocaleString()} FCFA</span></div>
+        <div class="info-item">Surface : <span>${p.surface} m²</span></div>`;
+    document.getElementById("visitModal").classList.add("open");
+    setTimeout(()=>lancer3D(p),300);
+}
+
+function changerPiece(btn,piece) {
+    document.querySelectorAll(".room-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const scene=document.getElementById("visitScene");
+    scene.innerHTML='<canvas id="canvas3d" style="width:100%;height:100%;border-radius:14px"></canvas>';
+    if (window.THREE) construirePiece3D(piece);
+    else { const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"; s.onload=()=>construirePiece3D(piece); document.head.appendChild(s); }
+}
+
+function closeVisit() { document.getElementById("visitModal").classList.remove("open"); document.getElementById("visitScene").innerHTML=""; }
+
+function lancer3D(p) {
+    const scene=document.getElementById("visitScene");
+    scene.innerHTML='<canvas id="canvas3d" style="width:100%;height:100%;border-radius:14px"></canvas>';
+    if (window.THREE) { construire3D(p); return; }
+    const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"; s.onload=()=>construire3D(p); document.head.appendChild(s);
+}
+
+function construire3D(p) {
+    const canvas=document.getElementById("canvas3d");
+    if (!canvas) return;
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+    renderer.setSize(canvas.offsetWidth,canvas.offsetHeight);
+    renderer.setClearColor(0x0a0a2e);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(75,canvas.offsetWidth/canvas.offsetHeight,0.1,1000);
+    camera.position.set(0,3,8);
+    scene.add(new THREE.AmbientLight(0x404040,2));
+    const dl=new THREE.DirectionalLight(0x00d4ff,3); dl.position.set(5,10,5); scene.add(dl);
+    const couleurs={"Maison":0x0080ff,"Centre Commercial":0xff6600,"Usine":0x888888};
+    const c=couleurs[p.type]||0x00d4ff;
+    if (p.type==="Maison") {
+        const base=new THREE.Mesh(new THREE.BoxGeometry(4,2,4),new THREE.MeshPhongMaterial({color:c})); base.position.y=1; scene.add(base);
+        const toit=new THREE.Mesh(new THREE.ConeGeometry(3.2,2,4),new THREE.MeshPhongMaterial({color:0xff4444})); toit.position.y=3; toit.rotation.y=Math.PI/4; scene.add(toit);
+        const porte=new THREE.Mesh(new THREE.BoxGeometry(0.6,1,0.1),new THREE.MeshPhongMaterial({color:0x8B4513})); porte.position.set(0,0.5,2.05); scene.add(porte);
+    } else if (p.type==="Centre Commercial") {
+        const base=new THREE.Mesh(new THREE.BoxGeometry(6,3,5),new THREE.MeshPhongMaterial({color:c})); base.position.y=1.5; scene.add(base);
+        for (let i=-2;i<=2;i+=2) { const f=new THREE.Mesh(new THREE.BoxGeometry(0.8,1,0.1),new THREE.MeshPhongMaterial({color:0x87CEEB,emissive:0x87CEEB,emissiveIntensity:0.3})); f.position.set(i,1.5,2.55); scene.add(f); }
+    } else {
+        const base=new THREE.Mesh(new THREE.BoxGeometry(7,2.5,5),new THREE.MeshPhongMaterial({color:c})); base.position.y=1.25; scene.add(base);
+        const ch=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,2),new THREE.MeshPhongMaterial({color:0x555555})); ch.position.set(2,3.5,0); scene.add(ch);
+    }
+    const sol=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshPhongMaterial({color:0x1a1a2e})); sol.rotation.x=-Math.PI/2; scene.add(sol);
+    scene.add(new THREE.GridHelper(20,20,0x00d4ff,0x333333));
+    let angle=0;
+    function animate() { requestAnimationFrame(animate); angle+=0.005; camera.position.x=Math.sin(angle)*8; camera.position.z=Math.cos(angle)*8; camera.lookAt(0,1,0); renderer.render(scene,camera); }
+    animate();
+}
+
+function construirePiece3D(piece) {
+    const canvas=document.getElementById("canvas3d");
+    if (!canvas) return;
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+    renderer.setSize(canvas.offsetWidth,canvas.offsetHeight);
+    renderer.setClearColor(0x0a0a2e);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(75,canvas.offsetWidth/canvas.offsetHeight,0.1,1000);
+    camera.position.set(0,2,5);
+    scene.add(new THREE.AmbientLight(0xffffff,1.5));
+    const dl=new THREE.DirectionalLight(0x00d4ff,2); dl.position.set(5,10,5); scene.add(dl);
+    const sol=new THREE.Mesh(new THREE.PlaneGeometry(10,10),new THREE.MeshPhongMaterial({color:0x222244})); sol.rotation.x=-Math.PI/2; scene.add(sol);
+    const mur=new THREE.Mesh(new THREE.PlaneGeometry(10,6),new THREE.MeshPhongMaterial({color:0x1a1a3e})); mur.position.set(0,3,-5); scene.add(mur);
+    const configs={
+        "🛋️ Salon":[{geo:new THREE.BoxGeometry(3,0.5,1.2),color:0x8B4513,pos:[0,0.25,0]},{geo:new THREE.BoxGeometry(3,0.8,0.4),color:0x8B4513,pos:[0,0.9,-0.6]},{geo:new THREE.BoxGeometry(2,1.5,0.1),color:0x333366,pos:[0,1.5,-4.9]}],
+        "🍳 Cuisine":[{geo:new THREE.BoxGeometry(4,0.8,0.6),color:0xaaaaaa,pos:[0,0.4,-4.7]},{geo:new THREE.BoxGeometry(1,0.5,1),color:0x555555,pos:[1,0.25,-3]}],
+        "🛏️ Chambre 1":[{geo:new THREE.BoxGeometry(2.5,0.4,2),color:0x8B6914,pos:[0,0.2,-1]},{geo:new THREE.BoxGeometry(2.5,0.6,0.3),color:0xffffff,pos:[0,0.7,-2]}],
+        "🛏️ Chambre 2":[{geo:new THREE.BoxGeometry(2,0.4,1.8),color:0x6B4914,pos:[1,0.2,-1]},{geo:new THREE.BoxGeometry(2,0.5,0.3),color:0xffeedd,pos:[1,0.65,-2]}],
+        "🏊 Piscine":[{geo:new THREE.BoxGeometry(5,0.2,3),color:0x0088ff,pos:[0,0.1,0]},{geo:new THREE.BoxGeometry(5,0.5,0.2),color:0xaaaaaa,pos:[0,0.25,-1.6]}],
+        "🛍️ Boutiques":[{geo:new THREE.BoxGeometry(1.5,2,1),color:0xff6600,pos:[-2,1,-2]},{geo:new THREE.BoxGeometry(1.5,2,1),color:0x0066ff,pos:[0,1,-2]},{geo:new THREE.BoxGeometry(1.5,2,1),color:0x00aa44,pos:[2,1,-2]}],
+        "🍔 Food Court":[{geo:new THREE.BoxGeometry(1.5,0.8,1.5),color:0x8B4513,pos:[-2,0.4,0]},{geo:new THREE.BoxGeometry(1.5,0.8,1.5),color:0x8B4513,pos:[0,0.4,0]},{geo:new THREE.BoxGeometry(1.5,0.8,1.5),color:0x8B4513,pos:[2,0.4,0]}],
+        "⚙️ Atelier":[{geo:new THREE.BoxGeometry(2,1.5,1),color:0x888888,pos:[-2,0.75,-2]},{geo:new THREE.BoxGeometry(1,2,1),color:0x666666,pos:[2,1,-2]}],
+        "📦 Stockage":[{geo:new THREE.BoxGeometry(1.2,1.2,1.2),color:0xaa8800,pos:[-2,0.6,-2]},{geo:new THREE.BoxGeometry(1.2,1.2,1.2),color:0xaa8800,pos:[0,0.6,-2]},{geo:new THREE.BoxGeometry(1.2,1.2,1.2),color:0xaa8800,pos:[2,0.6,-2]},{geo:new THREE.BoxGeometry(1.2,1.2,1.2),color:0xaa8800,pos:[-1,1.8,-2]}],
+        "🏢 Bureaux":[{geo:new THREE.BoxGeometry(1.5,0.8,0.6),color:0x334455,pos:[-1.5,0.4,-1]},{geo:new THREE.BoxGeometry(1.5,0.8,0.6),color:0x334455,pos:[1.5,0.4,-1]},{geo:new THREE.BoxGeometry(3,1.5,0.1),color:0x223344,pos:[0,1.5,-4.9]}]
+    };
+    const objets=configs[piece.trim()]||[{geo:new THREE.BoxGeometry(2,2,2),color:0x00d4ff,pos:[0,1,-2]}];
+    objets.forEach(o=>{ const mesh=new THREE.Mesh(o.geo,new THREE.MeshPhongMaterial({color:o.color})); mesh.position.set(...o.pos); scene.add(mesh); });
+    scene.add(new THREE.GridHelper(10,10,0x00d4ff,0x222244));
+    let angle=0;
+    function animate() { requestAnimationFrame(animate); angle+=0.004; camera.position.x=Math.sin(angle)*5; camera.position.z=Math.cos(angle)*5; camera.lookAt(0,1,0); renderer.render(scene,camera); }
+    animate();
+}
+
+async function login() {
+    const username=document.getElementById("username").value;
+    const password=document.getElementById("password").value;
+    const msg=document.getElementById("loginMsg");
+    try {
+        const res=await fetch(`${API}/login`,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:`username=${username}&password=${password}`});
+        const data=await res.json();
+        if (data.access_token) {
+            token=data.access_token; localStorage.setItem("token",token);
+            msg.className="ok"; msg.textContent="✅ Connexion réussie !";
+            setTimeout(()=>{ closeModal("loginModal"); document.getElementById("btnLogin").style.display="none"; document.getElementById("btnAdmin").style.display="inline-block"; document.getElementById("btnLogout").style.display="inline-block"; },1000);
+        } else { msg.className="err"; msg.textContent="❌ Identifiants incorrects"; }
+    } catch { msg.className="err"; msg.textContent="❌ Erreur de connexion"; }
+}
+
+async function ajouterPropriete() {
+    const msg=document.getElementById("adminMsg");
+    const body={type:document.getElementById("newType").value,nom:document.getElementById("newNom").value,ville:document.getElementById("newVille").value,prix:parseFloat(document.getElementById("newPrix").value),surface:parseInt(document.getElementById("newSurface").value),disponible:true};
+    try {
+        const res=await fetch(`${API}/proprietes`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify(body)});
+        const data=await res.json();
+        if (data.message) { msg.className="ok"; msg.textContent="✅ Ajoutée !"; setTimeout(()=>{ closeModal("adminModal"); chargerProps(); },1000); }
+        else { msg.className="err"; msg.textContent="❌ Erreur"; }
+    } catch { msg.className="err"; msg.textContent="❌ Erreur"; }
+}
+
+function logout() {
+    token=null; localStorage.removeItem("token");
+    document.getElementById("btnLogin").style.display="inline-block";
+    document.getElementById("btnAdmin").style.display="none";
+    document.getElementById("btnLogout").style.display="none";
+}
+
+if (token) {
+    document.getElementById("btnLogin").style.display="none";
+    document.getElementById("btnAdmin").style.display="inline-block";
+    document.getElementById("btnLogout").style.display="inline-block";
+}
+
+chargerProps();
+</script>
+</body>
+</html>
